@@ -1,4 +1,5 @@
 require 'socket'
+require 'json'
 
 class Server
 
@@ -7,6 +8,7 @@ class Server
 		loop {
 			@client = @server.accept
 			response = recieve_request
+			puts response
 			@client.puts response
 			@client.close
 		}
@@ -15,15 +17,16 @@ class Server
 	def recieve_request
 		puts "recieving..."
 		request = @client.read_nonblock(1000).split " "
-		puts request
 		request_type = request[0]
 		path = request[1]
 		version = request[2]
 
 		if request[0] == "GET"
 			get(request[1], request[2])
+		elsif request[0] == "POST"
+			post(request)
 		else
-			"Invalid Request"
+			return %{#{version} 400 BAD_REQUEST}
 		end
 	end
 
@@ -36,7 +39,7 @@ class Server
 			http_version = version
 		else
 			body = "Not Found"
-			code = "404 FILE NOT FOUND"
+			code = "404 FILE_NOT_FOUND"
 		end
 
 		response = version + code
@@ -44,6 +47,31 @@ class Server
 		response += "\r\n\r\n"
 		response += body
 		response
+	end
+
+	def post(input)
+		puts input
+		puts "Posting..."
+		params = JSON.parse(input[-1])
+		puts params
+		data = File.open(input[1], "r") { |f| f.read }
+		posted_data = ""
+		params.each do |val|
+			val.each do |key, val2|
+				posted_data += "<li>#{key}: #{val2}</li>\n\t\t\t"
+			end
+		end
+		puts posted_data
+		data.gsub!('<%= yield %>', posted_data)
+		puts data
+		header = data.length
+
+		response = input[2] + "200 OK"
+		response += "\r\n#{header}"
+		response += "\r\n\r\n#{data}"
+		response
+
+	response
 	end
 
 end
