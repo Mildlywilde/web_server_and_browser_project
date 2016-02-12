@@ -8,7 +8,6 @@ class Server
 		loop {
 			@client = @server.accept
 			response = recieve_request
-			puts response
 			@client.puts response
 			@client.close
 		}
@@ -50,10 +49,8 @@ class Server
 	end
 
 	def post(input)
-		puts input
 		puts "Posting..."
 		params = JSON.parse(input[-1])
-		puts params
 		data = File.open(input[1], "r") { |f| f.read }
 		posted_data = ""
 		params.each do |val|
@@ -61,17 +58,13 @@ class Server
 				posted_data += "<li>#{key}: #{val2}</li>\n\t\t\t"
 			end
 		end
-		puts posted_data
 		data.gsub!('<%= yield %>', posted_data)
-		puts data
 		header = data.length
 
 		response = input[2] + "200 OK"
 		response += "\r\n#{header}"
 		response += "\r\n\r\n#{data}"
 		response
-
-	response
 	end
 
 end
